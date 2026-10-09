@@ -1,0 +1,1152 @@
+---
+title: "Actividad A1. Introducción al modelo lineal"
+author: "Dra. Marta Barea Sepúlveda"
+date: "29 de septiembre de 2026"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    highlight: tango
+    latex_engine: pdflatex
+    keep_tex: false
+    includes:
+      in_header: preamble.tex
+  word_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
+classoption: twoside
+geometry: top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm
+fontsize: 11pt
+lang: es
+---
+
+\clearpage
+\pagestyle{plain}
+\setcounter{page}{1}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  tidy = FALSE
+)
+```
+
+\newpage
+
+\section*{Nota sobre los ejercicios realizados}
+\addcontentsline{toc}{section}{Nota sobre los ejercicios realizados}
+
+En esta actividad se han realizado **todos los ejercicios obligatorios** propuestos en el documento *Introducción al modelo lineal*.
+
+De acuerdo con las indicaciones del enunciado, los ejercicios señalados con (*) son opcionales y los señalados con (**) son, además, de mayor dificultad. Por este motivo, estos ejercicios opcionales no se incluyen en la presente entrega.
+
+Los ejercicios realizados son:
+
+- **Ejercicios iniciales:** 1 y 2.
+- **Ejercicios del libro de Faraway:** 1 y 2.
+- **Ejercicios del libro de Carmona:** 3 y 4.
+
+\clearpage
+\section*{Ejercicios iniciales}
+\addcontentsline{toc}{section}{Ejercicios iniciales}
+
+\color{black}
+1. Con los datos de los buitres leonados
+
+```{r}
+heartbpm <- c(47.53, 48.27, 49.51, 51.09, 52.57, 54.30,
+              54.25, 54.45, 57.95, 60.92, 61.91, 77.92,
+              82.07, 82.95, 83.94, 86.96, 90.42, 92.93, 100.05)
+
+metabol <- c(6.15, 6.31, 6.43, 6.78, 6.86, 6.90, 7.37, 7.41,
+             8.24, 9.22, 8.16, 12.61, 15.26, 13.09, 14.59,
+             17.35, 18.57, 19.00, 20.70)
+
+vulture <- data.frame(heartbpm, metabol)
+rm(heartbpm, metabol)
+attach(vulture)
+```
+
+Realizar el siguiente proceso:
+
+**(a)** Dibujar la nube de puntos con la instrucción `plot()`.
+
+\color{uocblue}
+Para visualizar la relación entre ambas variables, representamos la frecuencia cardíaca en el eje X y la tasa metabólica en el eje Y mediante un gráfico de dispersión, tal y como se pide en el apartado:
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Gráfico de dispersión
+plot(vulture,
+     xlab = "Frecuencia cardíaca (bpm)",
+     ylab = "Tasa metabólica",
+     main = "Tasa metabólica vs. Frecuencia cardíaca")
+```
+
+\color{uocblue}
+Tal y como se muestra en el gráfico de dispersión, o nube de puntos, a medida que aumenta la frecuencia cardíaca, también tiende a aumentar la tasa metabólica.
+
+\color{black}
+**(b)** Añadir la recta de regresión con la instrucción `abline()`.
+
+\color{uocblue}
+Ajustamos un modelo de regresión lineal tomando la frecuencia cardíaca como variable explicativa y la tasa metabólica como variable respuesta. A continuación, añadimos al gráfico de dispersión la recta de regresión obtenida, así como la ecuación de la recta:
+
+```{r, fig.width=6, fig.height=3.5, out.width="65%", fig.align="center"}
+# Ajuste del modelo de regresión lineal
+vulture_lm <- lm(metabol ~ heartbpm, data = vulture)
+
+# Gráfico de dispersión
+plot(vulture,
+     xlab = "Heart rate (bpm)",
+     ylab = "Metabolic rate",
+     main = "Metabolic rate vs. heart rate")
+
+# Recta de regresión
+abline(vulture_lm, col = "red", lwd = 2)
+
+# Obtención de los coeficientes del modelo
+coef_lm <- coef(vulture_lm)
+
+# Construcción de la ecuación de regresión
+equation <- paste0(
+  "y = ", round(coef_lm[1], 3),
+  " + ", round(coef_lm[2], 3), "x"
+)
+
+# Ecuación de regresión en el gráfico
+legend("topleft",
+       legend = equation,
+       bty = "o",
+       bg = "white")
+```
+
+\color{uocblue}
+Como sabemos, el modelo de regresión lineal ajusta una recta a los datos. En este caso, su pendiente es 0,278, por lo que por cada latido por minuto adicional, la tasa metabólica estimada aumenta 0,278 unidades.
+
+\color{black}
+**(c)** Dibujar el gráfico de residuos vs. valores ajustados con la función `plot()` aplicada al objeto `lm`.
+
+\color{uocblue}
+Representamos los residuos del modelo frente a los valores ajustados para observar cómo se distribuyen los errores del modelo de regresión lineal:
+
+```{r, fig.width=6, fig.height=3.5, out.width="65%", fig.align="center"}
+# Gráfico de residuos frente a valores ajustados
+plot(vulture_lm, which = 1)
+```
+
+\color{uocblue}
+Los residuos no se distribuyen de forma aleatoria alrededor de cero, sino que muestran un patrón curvo. Esto sugiere que el modelo lineal no se ajusta completamente a los datos.
+
+\color{black}
+**(d)** Añadir al gráfico de dispersión del apartado (a) la curva de regresión parabólica.
+
+*Nota:* Esto último se puede hacer con la instrucción `lines()` o con la instrucción `curve(, add = TRUE)`.
+
+\color{uocblue}
+Ajustamos ahora una regresión parabólica y añadimos la curva obtenida al gráfico de dispersión para representar la relación observada entre ambas variables:
+
+```{r, fig.width=6, fig.height=3.5, out.width="65%", fig.align="center"}
+# Ajuste del modelo de regresión parabólica
+vulture_quadratic <- lm(
+  metabol ~ heartbpm + I(heartbpm^2),
+  data = vulture
+)
+
+# Gráfico de dispersión
+plot(vulture,
+     xlab = "Frecuencia cardíaca (bpm)",
+     ylab = "Tasa metabólica",
+     main = "Tasa metabólica vs. Frecuencia cardíaca")
+
+# Curva de regresión parabólica
+curve(
+  predict(vulture_quadratic,
+          newdata = data.frame(heartbpm = x)),
+  add = TRUE,
+  col = "red",
+  lwd = 2
+)
+
+# Obtención de los coeficientes del modelo
+coef_quadratic <- coef(vulture_quadratic)
+
+# Construcción de la ecuación de regresión
+equation_quadratic <- bquote(
+  y == .(round(coef_quadratic[1], 3))
+  - .(abs(round(coef_quadratic[2], 3))) * x
+  + .(round(coef_quadratic[3], 5)) * x^2
+)
+
+# Ecuación de regresión en el gráfico
+legend("topleft",
+       legend = equation_quadratic,
+       bty = "o",
+       bg = "white")
+```
+
+\color{uocblue}
+Como se puede observar, la curva parabólica se adapta mejor a la forma de los datos, de acuerdo con el patrón curvo observado anteriormente en los residuos.
+
+\clearpage
+\color{black}
+2. Con los datos de la tensión arterial sistólica y la edad de los 69 pacientes que podemos encontrar en la web de \href{https://www.fisterra.com/formacion/metodologia-investigacion/tecnicas-regresion-regresion-lineal-simple/}{\underline{Fisterra}}, calcular los coeficientes de regresión de la recta mínimo cuadrática.
+
+\color{uocblue}
+Tomamos la tensión arterial sistólica como variable respuesta y la edad como variable explicativa. Para obtener los coeficientes de la recta de mínimos cuadrados ajustamos un modelo de regresión lineal con la función `lm()` y extraemos sus coeficientes con `coef()`.
+\color{black}
+
+```{r}
+# Datos de tensión sistólica
+systolic <- c(
+  114, 134, 124, 128, 116, 120, 138, 130, 139, 125,
+  132, 130, 140, 144, 110, 148, 124, 136, 150, 120,
+  144, 153, 134, 152, 158, 124, 128, 138, 142, 160,
+  135, 138, 142, 145, 149, 156, 159, 130, 157, 142,
+  144, 160, 174, 156, 158, 174, 150, 154, 165, 164,
+  168, 140, 170, 185, 154, 169, 172, 144, 162, 158,
+  162, 176, 176, 158, 170, 172, 184, 175, 180
+)
+
+# Datos de edad
+age <- c(
+  17, 18, 19, 19, 20, 21, 21, 22, 23, 25,
+  26, 29, 33, 33, 34, 35, 36, 36, 38, 39,
+  39, 40, 41, 41, 41, 42, 42, 42, 44, 44,
+  45, 45, 46, 47, 47, 47, 47, 48, 48, 50,
+  50, 51, 51, 52, 53, 55, 56, 56, 56, 57,
+  57, 59, 59, 60, 61, 61, 62, 63, 64, 65,
+  65, 65, 66, 67, 67, 68, 68, 69, 70
+)
+
+# Creación del conjunto de datos
+patients <- data.frame(age, systolic)
+
+# Ajuste del modelo de regresión lineal
+patients_lm <- lm(systolic ~ age, data = patients)
+
+# Coeficientes de la recta mínimo cuadrática
+coef(patients_lm)
+```
+
+\color{uocblue}
+Los coeficientes obtenidos son aproximadamente 103,35 para el intercepto y 0,98 para la pendiente. Por tanto, la recta de regresión mínimo cuadrática es:
+
+\[
+y = 103.35 + 0.98x
+\]
+
+donde \(x\) representa la edad del paciente e \(y\) la tensión arterial sistólica estimada. La pendiente indica que, por cada año que aumenta la edad, la tensión sistólica estimada aumenta aproximadamente 0,98 unidades.
+
+\color{black}
+\section*{Ejercicios del libro de Faraway}
+\addcontentsline{toc}{section}{Ejercicios del libro de Faraway}
+
+1. (Ejercicio 1 cap. 1 pág. 12)
+
+The dataset `teengamb` concerns a study of teenage gambling in Britain. Make a numerical and graphical summary of the data, commenting on any features that you find interesting. Limit the output you present to a quantity that a busy reader would find sufficient to get a basic understanding of the data.
+
+\color{uocblue}
+El conjunto de datos `teengamb` pertenece al paquete `faraway` de R. Podemos consultar la información sobre el conjunto de datos y la descripción de sus variables mediante la función `help()`, aunque esta no se incluye en el documento porque su salida se muestra en el panel de ayuda de RStudio. Para examinar la estructura de los datos utilizamos la función `str()`:
+
+\color{black}
+```{r}
+# Carga de los datos
+library(faraway)
+data(teengamb)
+
+# Estructura del conjunto de datos
+str(teengamb)
+```
+
+\color{uocblue}
+Como se puede observar, el conjunto de datos  `teengamb` contiene 47 observaciones y 5 variables. Consultando, además, la información derivada de `help()`, estas variables corresponden a:
+
+- `sex`: sexo, codificado como 0 para hombres y 1 para mujeres.
+- `status`: puntuación del estatus socioeconómico basada en la ocupación de los padres.
+- `income`: ingresos semanales en libras.
+- `verbal`: puntuación verbal, correspondiente al número de palabras correctamente definidas de un total de 12.
+- `gamble`: gasto anual en apuestas, expresado en libras.
+
+\color{uocblue}
+Llevamos a cabo el resumen numérico del conjunto de datos:
+
+\color{black}
+```{r}
+# Resumen numérico
+summary(teengamb)
+```
+
+\color{uocblue}
+En general, los datos muestran bastante variabilidad entre los adolescentes. La muestra contiene más hombres que mujeres y existen diferencias tanto en el estatus socioeconómico como en los ingresos y la puntuación verbal. Lo más destacable es el gasto en apuestas (`gamble`), ya que presenta valores muy diferentes entre los participantes y algunos gastos especialmente elevados, haciendo que la media (19,3) sea bastante mayor que la mediana (6).
+
+A partir de lo observado en el resumen numérico, representamos las distribuciones de `income` y `gamble`, ya que son las variables que muestran una mayor diferencia entre la media y la mediana y presentan valores máximos alejados del resto de la distribución. Para visualizar mejor estas características utilizamos histogramas:
+
+\color{black}
+```{r, fig.width=7, fig.height=4, out.width="75%", fig.align="center"}
+# Resumen gráfico
+# Dos gráficos en una misma fila
+par(mfrow = c(1, 2))
+
+# Histograma de los ingresos
+hist(teengamb$income,
+     main = "Ingresos semanales",
+     xlab = "Ingresos (libras)")
+
+# Histograma del gasto en apuestas
+hist(teengamb$gamble,
+     main = "Gasto anual en apuestas",
+     xlab = "Gasto (libras)")
+```
+
+\color{uocblue}
+En ambos histogramas, la mayoría de los valores se concentran en la parte baja. En el caso de `gamble`, esta diferencia es más clara, ya que la mayoría de los adolescentes presenta un gasto bajo en apuestas, mientras que unos pocos tienen gastos mucho más elevados.
+
+\color{black}
+2. (Ejercicio 2 pág. 12)
+
+The dataset `uswages` is drawn as a sample from the Current Population Survey in 1988. Make a numerical and graphical summary of the data as in the previous question.
+
+\color{uocblue}
+El conjunto de datos `uswages` pertenece, también, al paquete `faraway` de R. Podemos consultar la información sobre el conjunto de datos y la descripción de sus variables mediante la función `help()`, aunque, como comentamos en el ejercicio anterior, esta no se incluye en el documento porque su salida se muestra en el panel de ayuda de RStudio. Para examinar la estructura de los datos utilizamos la función `str()`:
+
+\color{black}
+```{r}
+# Carga de los datos
+library(faraway)
+data(uswages)
+
+# Estructura del conjunto de datos
+str(uswages)
+```
+
+\color{uocblue}
+Como se puede observar, el conjunto de datos `uswages` contiene 2000 observaciones y 10 variables. Consultando, además, la información derivada de `help()`, estas variables corresponden a:
+
+- `wage`: salario semanal real en dólares.
+- `educ`: años de educación.
+- `exper`: años de experiencia.
+- `race`: raza, codificada como 1 para trabajadores negros y 0 para trabajadores blancos.
+- `smsa`: indica si el trabajador vive en un área metropolitana, codificado como 1 si vive en ella y 0 si no.
+- `ne`: indica si vive en el noreste.
+- `mw`: indica si vive en el medio oeste.
+- `so`: indica si vive en el sur.
+- `we`: indica si vive en el oeste.
+- `pt`: indica si trabaja a tiempo parcial, codificado como 1 si trabaja a tiempo parcial y 0 si no.
+
+\color{uocblue}
+Llevamos a cabo el resumen numérico del conjunto de datos:
+
+\color{black}
+```{r}
+# Resumen numérico
+summary(uswages)
+```
+
+\color{uocblue}
+En general, el conjunto de datos muestra bastante variabilidad entre los trabajadores. Lo más destacable es el salario semanal (`wage`), que presenta algunos valores muy elevados y un máximo de 7716,05, muy alejado de la mediana de 522,32. También se observan diferencias en los años de educación y experiencia, destacando en esta última un valor mínimo de -2.
+
+A partir de lo observado en el resumen numérico, representamos las distribuciones de wage, educ y exper para visualizar mejor las diferencias observadas entre los trabajadores. Para ello, usamos histogramas:
+
+\color{black}
+```{r, fig.width=8, fig.height=3.5, out.width="85%", fig.align="center"}
+# Resumen gráfico
+# Tres gráficos en una misma fila
+par(mfrow = c(1, 3))
+
+# Histograma del salario semanal
+hist(uswages$wage,
+     main = "Salario semanal",
+     xlab = "Salario (dólares)")
+
+# Histograma de los años de educación
+hist(uswages$educ,
+     main = "Educación",
+     xlab = "Años de educación")
+
+# Histograma de los años de experiencia
+hist(uswages$exper,
+     main = "Experiencia",
+     xlab = "Años de experiencia")
+```
+
+\color{uocblue}
+Los histogramas muestran que el salario semanal presenta una distribución muy desigual, con la mayoría de los trabajadores concentrados en salarios más bajos y algunos valores mucho más elevados. Los años de educación se concentran en determinados valores, mientras que la experiencia presenta una distribución más amplia entre los trabajadores.
+
+\clearpage
+\color{black}
+\section*{Ejercicios del libro de Carmona}
+\addcontentsline{toc}{section}{Ejercicios del libro de Carmona}
+
+3. (Ejercicio 1.3 del Capítulo 1 página 24)
+
+Consideremos el problema de tráfico planteado en el apartado 1.2 de este capítulo, con la variable independiente densidad y la variable dependiente raíz cuadrada de la velocidad. Con los datos proporcionados en la tabla 1.1:
+
+```{r}
+# Datos del problema de tráfico
+dens <- c(12.7,17.0,66.0,50.0,87.8,81.4,75.6,66.2,81.1,62.8,77.0,89.6,
+          18.3,19.1,16.5,22.2,18.6,66.0,60.3,56.0,66.3,61.7,66.6,67.8)
+
+vel <- c(62.4,50.7,17.1,25.9,12.4,13.4,13.7,17.9,13.8,17.9,15.8,12.6,
+         51.2,50.8,54.7,46.5,46.3,16.9,19.8,21.2,18.3,18.0,16.6,18.3)
+
+# Raíz cuadrada de la velocidad
+rvel <- sqrt(vel)
+```
+
+**(a)** Dibujar la nube de puntos y la recta que pasa por los puntos \((12.7,\sqrt{62.4})\) y \((87.8,\sqrt{12.4})\). Dibujar el gráfico de los residuos con la densidad y el gráfico con las predicciones. Calcular la suma de cuadrados de los residuos.
+
+\color{uocblue}
+
+En primer lugar calculamos la recta que pasa por los dos puntos indicados. La pendiente y el término independiente se obtienen a partir de las coordenadas de ambos puntos.
+
+\color{black}
+
+```{r}
+# Coordenadas de los dos puntos
+x1 <- 12.7
+y1 <- sqrt(62.4)
+
+x2 <- 87.8
+y2 <- sqrt(12.4)
+
+# Pendiente e intercepto de la recta
+b <- (y2 - y1) / (x2 - x1)
+a <- y1 - b * x1
+
+a
+b
+```
+
+\color{uocblue}
+
+La recta obtenida es aproximadamente:
+
+\[
+y=8.6397-0.0583x
+\]
+
+\color{black}
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Nube de puntos
+plot(dens, rvel,
+     xlab = "Densidad",
+     ylab = "Raíz de la velocidad",
+     main = "Densidad vs. raíz de la velocidad")
+
+# Recta que pasa por los dos puntos
+abline(a, b, col = "red")
+
+# Ecuación de la recta
+equation_a <- paste0(
+  "y = ", round(a, 4),
+  " - ", abs(round(b, 4)), "x"
+)
+
+legend("topright",
+       legend = equation_a,
+       bty = "o",
+       bg = "white")
+```
+
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Predicciones y residuos
+pred_a <- a + b * dens
+e_a <- rvel - pred_a
+
+# Gráficos de residuos
+par(mfrow = c(1, 2))
+
+plot(dens, e_a,
+     xlab = "Densidad",
+     ylab = "Residuos",
+     main = "Residuos vs. densidad")
+abline(h = 0)
+
+plot(pred_a, e_a,
+     xlab = "Predicción",
+     ylab = "Residuos",
+     main = "Residuos vs. predicción")
+abline(h = 0)
+```
+
+```{r}
+# Suma de cuadrados de los residuos
+sum(e_a^2)
+```
+
+\color{uocblue}
+
+La suma de cuadrados de los residuos es aproximadamente:
+
+\[
+SCR = 6.69
+\]
+
+Los residuos muestran que esta primera recta aproxima la relación entre las variables, aunque todavía quedan diferencias apreciables entre los valores observados y las predicciones.
+
+\color{black}
+
+**(b)** Hallar la recta de regresión simple. Dibujar el gráfico de los residuos con la densidad y el gráfico con las predicciones. Calcular la suma de cuadrados de los residuos.
+
+\color{uocblue}
+
+A continuación calculamos la recta de regresión por mínimos cuadrados mediante `lsfit()`, siguiendo el procedimiento utilizado en el libro.
+
+\color{black}
+
+```{r}
+# Ajuste de la recta de regresión
+recta_ls <- lsfit(dens, rvel)
+
+# Coeficientes
+recta_ls$coef
+```
+
+\color{uocblue}
+
+Los coeficientes obtenidos son aproximadamente 8.0898 para el intercepto y -0.0566 para la pendiente. Por tanto, la recta de regresión es:
+
+\[
+y=8.0898-0.0566x
+\]
+
+\color{black}
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Nube de puntos y recta de regresión
+plot(dens, rvel,
+     xlab = "Densidad",
+     ylab = "Raíz de la velocidad",
+     main = "Recta de regresión")
+
+abline(recta_ls, col = "red")
+
+# Ecuación de la recta
+equation_b <- paste0(
+  "y = ", round(recta_ls$coef[1], 4),
+  " - ", abs(round(recta_ls$coef[2], 4)), "x"
+)
+
+legend("topright",
+       legend = equation_b,
+       bty = "o",
+       bg = "white")
+```
+
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Residuos y predicciones
+e_b <- recta_ls$residuals
+pred_b <- rvel - e_b
+
+# Gráficos de residuos
+par(mfrow = c(1, 2))
+
+plot(dens, e_b,
+     xlab = "Densidad",
+     ylab = "Residuos",
+     main = "Residuos vs. densidad")
+abline(h = 0)
+
+plot(pred_b, e_b,
+     xlab = "Predicción",
+     ylab = "Residuos",
+     main = "Residuos vs. predicción")
+abline(h = 0)
+```
+
+```{r}
+# Suma de cuadrados de los residuos
+sum(e_b^2)
+```
+
+\color{uocblue}
+
+La suma de cuadrados de los residuos es aproximadamente:
+
+\[
+SCR = 1.59
+\]
+
+Este valor es bastante menor que el obtenido en el apartado anterior, por lo que la recta de regresión se ajusta mejor a los datos.
+
+\color{black}
+
+**(c)** Mejorar el modelo anterior considerando una regresión parabólica. Dibujar el gráfico de los residuos con la densidad y el gráfico con las predicciones. Calcular la suma de cuadrados de los residuos.
+
+\color{uocblue}
+
+Para el modelo parabólico añadimos al ajuste la densidad al cuadrado. Tal y como se hace en el libro, introducimos `dens` y `dens^2` en un mismo conjunto de datos y utilizamos de nuevo `lsfit()`.
+
+\color{black}
+
+```{r}
+# Variables para el modelo parabólico
+matriz_frame <- data.frame(dens, dens^2)
+
+# Ajuste del modelo parabólico
+parabola_ls <- lsfit(matriz_frame, rvel)
+
+# Coeficientes
+parabola_ls$coef
+```
+
+\color{uocblue}
+
+Los coeficientes obtenidos son aproximadamente:
+
+\[
+\beta_0=8.88142
+\]
+
+\[
+\beta_1=-0.10352
+\]
+
+\[
+\beta_2=0.00049
+\]
+
+Por tanto, la parábola de regresión es:
+
+\[
+y=8.88142-0.10352x+0.00049x^2
+\]
+
+\color{black}
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Nube de puntos
+plot(dens, rvel,
+     xlab = "Densidad",
+     ylab = "Raíz de la velocidad",
+     main = "Regresión parabólica")
+
+# Curva parabólica
+curve(parabola_ls$coef[1] +
+      parabola_ls$coef[2] * x +
+      parabola_ls$coef[3] * x^2,
+      add = TRUE,
+      col = "red")
+
+# Ecuación de la parábola
+equation_c <- paste0(
+  "y = ", round(parabola_ls$coef[1], 5),
+  " - ", abs(round(parabola_ls$coef[2], 5)), "x",
+  " + ", round(parabola_ls$coef[3], 5), "x^2"
+)
+
+legend("topright",
+       legend = equation_c,
+       bty = "o",
+       bg = "white")
+```
+
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Residuos y predicciones
+e_c <- parabola_ls$residuals
+pred_c <- rvel - e_c
+
+# Gráficos de residuos
+par(mfrow = c(1, 2))
+
+plot(dens, e_c,
+     xlab = "Densidad",
+     ylab = "Residuos",
+     main = "Residuos vs. densidad")
+abline(h = 0)
+
+plot(pred_c, e_c,
+     xlab = "Predicción",
+     ylab = "Residuos",
+     main = "Residuos vs. predicción")
+abline(h = 0)
+```
+
+```{r}
+# Suma de cuadrados de los residuos
+sum(e_c^2)
+```
+
+\color{uocblue}
+
+La suma de cuadrados de los residuos es aproximadamente:
+
+\[
+SCR = 0.35
+\]
+
+La suma de cuadrados vuelve a disminuir de forma clara respecto al modelo lineal, por lo que el modelo parabólico se ajusta mejor a estos datos.
+
+\color{black}
+
+**(d)** Calcular la capacidad de la carretera o punto de máximo flujo. Recordar que:
+
+\[
+\text{flujo}=\text{velocidad}\times\text{densidad}
+\]
+
+\color{uocblue}
+
+El modelo parabólico se ha ajustado sobre la raíz cuadrada de la velocidad:
+
+\[
+\sqrt{\text{velocidad}}
+=
+8.88142-0.10352x+0.000489x^2
+\]
+
+Por tanto, la velocidad estimada es:
+
+\[
+\text{velocidad}
+=
+\left(8.88142-0.10352x+0.000489x^2\right)^2
+\]
+
+y el flujo queda expresado como:
+
+\[
+f(x)
+=
+x\left(8.88142-0.10352x+0.000489x^2\right)^2
+\]
+
+A partir de la función de flujo obtenida, calculamos el valor de la densidad para el que el flujo alcanza su máximo. Se obtiene una densidad aproximada de:
+
+\[
+x=43.52
+\]
+
+Para esta densidad, el flujo máximo es aproximadamente:
+
+\[
+f(43.52)=1223.9
+\]
+
+Por tanto, la capacidad estimada de la carretera es de aproximadamente **1224 vehículos por hora**, alcanzada para una densidad de unos **43.5 vehículos por kilómetro**.
+
+\color{black}
+
+4. (Ejercicio 1.4 del Capítulo 1 página 24)
+
+La siguiente tabla contiene los mejores tiempos conseguidos en algunas pruebas de velocidad en atletismo en los Juegos Olímpicos de Atlanta:
+
+| Distancia (m) | Hombres (s) | Mujeres (s) |
+|---:|---:|---:|
+| 100 | 9.84 | 10.94 |
+| 200 | 19.32 | 22.12 |
+| 400 | 43.19 | 48.25 |
+| 800 | 102.58 | 117.73 |
+| 1500 | 215.78 | 240.83 |
+| 5000 | 787.96 | 899.88 |
+| 10000 | 1627.34 | 1861.63 |
+| 42192 | 7956.00 | 8765.00 |
+
+```{r}
+# Datos
+distancia <- c(100, 200, 400, 800, 1500, 5000, 10000, 42192)
+
+hombres <- c(9.84, 19.32, 43.19, 102.58,
+             215.78, 787.96, 1627.34, 7956.00)
+
+mujeres <- c(10.94, 22.12, 48.25, 117.73,
+             240.83, 899.88, 1861.63, 8765.00)
+```
+
+**(a)** Datos de los hombres
+
+\color{uocblue}
+
+Tomamos la distancia como variable independiente y el tiempo de los hombres como variable respuesta. Calculamos la recta de regresión mediante `lsfit()`.
+
+\color{black}
+
+```{r}
+# Recta de regresión para los hombres
+hombres_ls <- lsfit(distancia, hombres)
+
+# Coeficientes
+hombres_ls$coef
+```
+
+\color{uocblue}
+
+La recta de regresión obtenida es aproximadamente:
+
+\[
+y=-78.2342+0.1892x
+\]
+
+\color{black}
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Nube de puntos y recta
+plot(distancia, hombres,
+     xlab = "Distancia (m)",
+     ylab = "Tiempo (s)",
+     main = "Hombres")
+
+abline(hombres_ls, col = "red")
+
+# Ecuación de la recta
+equation_hombres <- paste0(
+  "y = ", round(hombres_ls$coef[1], 4),
+  " + ", round(hombres_ls$coef[2], 4), "x"
+)
+
+legend("topleft",
+       legend = equation_hombres,
+       bty = "o",
+       bg = "white")
+```
+
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Residuos y predicciones
+e_hombres <- hombres_ls$residuals
+pred_hombres <- hombres - e_hombres
+
+par(mfrow = c(1, 2))
+
+plot(distancia, e_hombres,
+     xlab = "Distancia",
+     ylab = "Residuos",
+     main = "Residuos vs. distancia")
+abline(h = 0)
+
+plot(pred_hombres, e_hombres,
+     xlab = "Predicción",
+     ylab = "Residuos",
+     main = "Residuos vs. predicción")
+abline(h = 0)
+```
+
+```{r}
+# Suma de cuadrados de los residuos
+SCR_hombres <- sum(e_hombres^2)
+SCR_hombres
+
+# Coeficiente de determinación
+R2_hombres <- 1 -
+  SCR_hombres / sum((hombres - mean(hombres))^2)
+
+R2_hombres
+```
+
+\color{uocblue}
+
+La suma de cuadrados de los residuos es aproximadamente:
+
+\[
+SCR=55188.996
+\]
+
+y el coeficiente de determinación es:
+
+\[
+R^2=0.9989
+\]
+
+El valor de \(R^2\) está muy próximo a 1, lo que indica un ajuste alto de la recta a los datos.
+
+\color{black}
+
+**(b)** Logaritmos de tiempo y distancia para los hombres
+
+\color{uocblue}
+
+Repetimos el ajuste utilizando ahora los logaritmos de la distancia y del tiempo.
+
+\color{black}
+
+```{r}
+# Logaritmos de las variables
+log_distancia <- log(distancia)
+log_hombres <- log(hombres)
+
+# Recta de regresión
+hombres_log_ls <- lsfit(log_distancia, log_hombres)
+
+# Coeficientes
+hombres_log_ls$coef
+```
+
+\color{uocblue}
+
+La recta obtenida es aproximadamente:
+
+\[
+\log(y)
+=
+-2.8860
++
+1.1181\log(x)
+\]
+
+\color{black}
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Nube de puntos y recta
+plot(log_distancia, log_hombres,
+     xlab = "log(Distancia)",
+     ylab = "log(Tiempo)",
+     main = "Hombres: variables logarítmicas")
+
+abline(hombres_log_ls, col = "red")
+
+# Ecuación de la recta
+equation_hombres_log <- paste0(
+  "log(y) = ", round(hombres_log_ls$coef[1], 4),
+  " + ", round(hombres_log_ls$coef[2], 4), " log(x)"
+)
+
+legend("topleft",
+       legend = equation_hombres_log,
+       bty = "o",
+       bg = "white")
+```
+
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Residuos y predicciones
+e_hombres_log <- hombres_log_ls$residuals
+pred_hombres_log <- log_hombres - e_hombres_log
+
+par(mfrow = c(1, 2))
+
+plot(log_distancia, e_hombres_log,
+     xlab = "log(Distancia)",
+     ylab = "Residuos",
+     main = "Residuos vs. distancia")
+abline(h = 0)
+
+plot(pred_hombres_log, e_hombres_log,
+     xlab = "Predicción",
+     ylab = "Residuos",
+     main = "Residuos vs. predicción")
+abline(h = 0)
+```
+
+```{r}
+# Suma de cuadrados de los residuos
+SCR_hombres_log <- sum(e_hombres_log^2)
+SCR_hombres_log
+
+# Coeficiente de determinación
+R2_hombres_log <- 1 -
+  SCR_hombres_log / sum((log_hombres - mean(log_hombres))^2)
+
+R2_hombres_log
+```
+
+\color{uocblue}
+
+Con las variables transformadas obtenemos:
+
+\[
+SCR=0.0204
+\]
+
+y
+
+\[
+R^2=0.99945
+\]
+
+El valor de \(R^2\) vuelve a estar muy próximo a 1.
+
+\color{black}
+
+**(c)** Datos de las mujeres
+
+\color{uocblue}
+
+Repetimos los dos ajustes anteriores utilizando ahora los tiempos de las mujeres.
+
+\color{black}
+
+```{r}
+# Recta de regresión para las mujeres
+mujeres_ls <- lsfit(distancia, mujeres)
+
+# Coeficientes
+mujeres_ls$coef
+```
+
+\color{uocblue}
+
+La recta obtenida es aproximadamente:
+
+\[
+y=-72.5791+0.20845x
+\]
+
+\color{black}
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Nube de puntos y recta
+plot(distancia, mujeres,
+     xlab = "Distancia (m)",
+     ylab = "Tiempo (s)",
+     main = "Mujeres")
+
+abline(mujeres_ls, col = "red")
+
+# Ecuación de la recta
+equation_mujeres <- paste0(
+  "y = ", round(mujeres_ls$coef[1], 4),
+  " + ", round(mujeres_ls$coef[2], 5), "x"
+)
+
+legend("topleft",
+       legend = equation_mujeres,
+       bty = "o",
+       bg = "white")
+```
+
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Residuos y predicciones
+e_mujeres <- mujeres_ls$residuals
+pred_mujeres <- mujeres - e_mujeres
+
+par(mfrow = c(1, 2))
+
+plot(distancia, e_mujeres,
+     xlab = "Distancia",
+     ylab = "Residuos",
+     main = "Residuos vs. distancia")
+abline(h = 0)
+
+plot(pred_mujeres, e_mujeres,
+     xlab = "Predicción",
+     ylab = "Residuos",
+     main = "Residuos vs. predicción")
+abline(h = 0)
+```
+
+```{r}
+# Suma de cuadrados y R2
+SCR_mujeres <- sum(e_mujeres^2)
+SCR_mujeres
+
+R2_mujeres <- 1 -
+  SCR_mujeres / sum((mujeres - mean(mujeres))^2)
+
+R2_mujeres
+```
+
+\color{uocblue}
+
+Para los datos originales de las mujeres obtenemos:
+
+\[
+SCR=37973.260
+\]
+
+y
+
+\[
+R^2=0.9994
+\]
+
+A continuación repetimos el análisis utilizando los logaritmos.
+
+\color{black}
+
+```{r}
+# Logaritmos
+log_mujeres <- log(mujeres)
+
+# Recta de regresión
+mujeres_log_ls <- lsfit(log_distancia, log_mujeres)
+
+# Coeficientes
+mujeres_log_ls$coef
+```
+
+\color{uocblue}
+
+La recta obtenida es aproximadamente:
+
+\[
+\log(y)
+=
+-2.7591
++
+1.1172\log(x)
+\]
+
+\color{black}
+
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Nube de puntos y recta
+plot(log_distancia, log_mujeres,
+     xlab = "log(Distancia)",
+     ylab = "log(Tiempo)",
+     main = "Mujeres: variables logarítmicas")
+
+abline(mujeres_log_ls, col = "red")
+
+# Ecuación de la recta
+equation_mujeres_log <- paste0(
+  "log(y) = ", round(mujeres_log_ls$coef[1], 4),
+  " + ", round(mujeres_log_ls$coef[2], 4), " log(x)"
+)
+
+legend("topleft",
+       legend = equation_mujeres_log,
+       bty = "o",
+       bg = "white")
+```
+
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Residuos y predicciones
+e_mujeres_log <- mujeres_log_ls$residuals
+pred_mujeres_log <- log_mujeres - e_mujeres_log
+
+par(mfrow = c(1, 2))
+
+plot(log_distancia, e_mujeres_log,
+     xlab = "log(Distancia)",
+     ylab = "Residuos",
+     main = "Residuos vs. distancia")
+abline(h = 0)
+
+plot(pred_mujeres_log, e_mujeres_log,
+     xlab = "Predicción",
+     ylab = "Residuos",
+     main = "Residuos vs. predicción")
+abline(h = 0)
+```
+
+```{r}
+# Suma de cuadrados y R2
+SCR_mujeres_log <- sum(e_mujeres_log^2)
+SCR_mujeres_log
+
+R2_mujeres_log <- 1 -
+  SCR_mujeres_log / sum((log_mujeres - mean(log_mujeres))^2)
+
+R2_mujeres_log
+```
+
+\color{uocblue}
+
+Para las variables transformadas obtenemos:
+
+\[
+SCR=0.0221
+\]
+
+y
+
+\[
+R^2=0.9994
+\]
+
+En los cuatro ajustes, los valores de \(R^2\) están muy próximos a 1. Al utilizar los logaritmos, tanto para hombres como para mujeres, los puntos siguen muy de cerca una relación lineal.
