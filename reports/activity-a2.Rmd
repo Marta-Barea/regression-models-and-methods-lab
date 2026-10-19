@@ -1,0 +1,587 @@
+---
+title: "Actividad A2. Estimación del modelo lineal"
+author: "Dra. Marta Barea Sepúlveda"
+date: "13 de octubre de 2026"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    highlight: tango
+    latex_engine: pdflatex
+    keep_tex: false
+    includes:
+      in_header: preamble.tex
+  word_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
+classoption: twoside
+geometry: top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm
+fontsize: 11pt
+lang: es
+---
+
+\clearpage
+\pagestyle{plain}
+\setcounter{page}{1}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, tidy = FALSE)
+```
+
+\newpage
+\section*{Nota sobre los ejercicios realizados}
+\addcontentsline{toc}{section}{Nota sobre los ejercicios realizados}
+
+En esta actividad se han realizado **todos los ejercicios obligatorios** propuestos en el documento *Estimación del modelo lineal*.
+
+De acuerdo con las indicaciones del enunciado, los ejercicios señalados con (*) son opcionales y los señalados con (**) son, además, de mayor dificultad. Por este motivo, estos ejercicios opcionales no se incluyen en la presente entrega.
+
+Los ejercicios realizados son:
+
+- **Ejercicios del libro de Faraway:** 1, 2, 4, 5, 6 y 7.
+- **Ejercicios del libro de Carmona:** 1 y 2.
+
+\clearpage
+\section*{Ejercicios del libro de Faraway}
+\addcontentsline{toc}{section}{Ejercicios del libro de Faraway}
+
+\color{black}
+1. (Ejercicio 1, capítulo 2, página 30)
+
+The dataset `teengamb` concerns a study of teenage gambling in Britain. Fit a regression model with the expenditure on gambling as the response and the sex, status, income and verbal score as predictors. Present the output.
+
+\color{uocblue}
+Ajustamos el modelo de regresión múltiple con `gamble` como variable respuesta y las cuatro variables restantes como explicativas.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(teengamb)
+
+# Ajustar el modelo
+modelo_teen <- lm(gamble ~ sex + status + income + verbal, data = teengamb)
+
+# Resumen del modelo
+summary(modelo_teen)
+```
+
+\color{black}
+**(a)** What percentage of variation in the response is explained by these predictors?
+
+\color{uocblue}
+El porcentaje de variabilidad explicado por el modelo se obtiene a partir de $R^2$.
+
+\color{black}
+```{r}
+# Porcentaje de variabilidad explicado
+summary(modelo_teen)$r.squared * 100
+```
+
+\color{uocblue}
+El modelo explica aproximadamente `r round(100 * summary(modelo_teen)$r.squared, 2)` % de la variabilidad del gasto en apuestas.
+
+\color{black}
+**(b)** Which observation has the largest (positive) residual? Give the case number.
+
+\color{black}
+```{r}
+# Observación con el mayor residuo positivo
+which.max(residuals(modelo_teen))
+```
+
+\color{uocblue}
+La observación con el mayor residuo positivo es la número `r which.max(residuals(modelo_teen))`.
+
+\color{black}
+**(c)** Compute the mean and median of the residuals.
+
+\color{black}
+```{r}
+# Calcular la media
+mean(residuals(modelo_teen))
+
+# Calcular la mediana
+median(residuals(modelo_teen))
+```
+
+\color{uocblue}
+La media es prácticamente cero, como corresponde a un ajuste por mínimos cuadrados con intercepto. La mediana es `r round(median(residuals(modelo_teen)), 3)`.
+
+\color{black}
+**(d)** Compute the correlation of the residuals with the fitted values.
+
+\color{black}
+```{r}
+# Calcular la correlación entre los residuos y los valores ajustados
+cor(residuals(modelo_teen), fitted(modelo_teen))
+```
+
+\color{uocblue}
+La correlación es prácticamente nula, debido a la ortogonalidad entre los residuos y los valores ajustados en mínimos cuadrados.
+
+\color{black}
+**(e)** Compute the correlation of the residuals with the income.
+
+\color{black}
+```{r}
+# Calcular la correlación entre los residuos y la variable income
+cor(residuals(modelo_teen), teengamb$income)
+```
+
+\color{uocblue}
+La correlación también es prácticamente cero, ya que `income` forma parte de la matriz de diseño del modelo.
+
+\color{black}
+**(f)** For all other predictors held constant, what would be the difference in predicted expenditure on gambling for a male compared to a female?
+
+\color{uocblue}
+La variable `sex` está codificada como 0 para hombres y 1 para mujeres. Por tanto, manteniendo constantes las demás variables, la diferencia entre el gasto previsto para un hombre y para una mujer es el opuesto del coeficiente de `sex`.
+
+\color{black}
+```{r}
+# Diferencia en el gasto previsto entre hombres y mujeres
+-coef(modelo_teen)["sex"]
+```
+
+\color{uocblue}
+El gasto anual previsto para un hombre es aproximadamente `r round(-coef(modelo_teen)["sex"], 2)` libras mayor que para una mujer, manteniendo constantes las demás variables.
+
+\color{black}
+2. (Ejercicio 2, capítulo 2, página 30)
+
+The dataset `uswages` is drawn as a sample from the Current Population Survey in 1988. Fit a model with weekly wages as the response and years of education and experience as predictors. Report and give a simple interpretation to the regression coefficient for years of education. Now fit the same model but with logged weekly wages. Give an interpretation to the regression coefficient for years of education. Which interpretation is more natural?
+
+\color{uocblue}
+En primer lugar ajustamos la regresión del salario semanal sobre los años de educación y experiencia.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(uswages)
+
+# Ajustar el modelo de regresión
+modelo_salario <- lm(wage ~ educ + exper, data = uswages)
+
+# Resumen del modelo
+summary(modelo_salario)
+```
+
+\color{uocblue}
+Manteniendo constante la experiencia, un año adicional de educación se asocia con un aumento estimado de `r round(coef(modelo_salario)["educ"], 2)` dólares en el salario semanal.
+
+A continuación utilizamos el logaritmo del salario como respuesta, manteniendo las mismas variables explicativas.
+
+\color{black}
+```{r}
+# Ajustar el modelo con logaritmo del salario
+modelo_logsalario <- lm(log(wage) ~ educ + exper, data = uswages)
+summary(modelo_logsalario)
+```
+
+\color{uocblue}
+Manteniendo constante la experiencia, un año adicional de educación se asocia con un cambio aproximado del `r round(100 * coef(modelo_logsalario)["educ"], 2)` % en el salario semanal. En este caso, resulta más sencillo interpretar el efecto de la educación como un porcentaje que como una cantidad fija de dinero.
+
+\color{black}
+4. (Ejercicio 4, capítulo 2, página 30)
+
+The dataset `prostate` comes from a study on 97 men with prostate cancer who were due to receive a radical prostatectomy. Fit a model with `lpsa` as the response and `lcavol` as the predictor. Record the residual standard error and the $R^2$. Now add `lweight`, `svi`, `lbph`, `age`, `lcp`, `pgg45` and `gleason` to the model one at a time. For each model record the residual standard error and the $R^2$. Plot the trends in these two statistics.
+
+\color{uocblue}
+Partimos del modelo con `lcavol` y añadimos las variables explicativas en el orden indicado, conservando las anteriores. Registramos la desviación estándar residual y el coeficiente de determinación de cada ajuste.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(prostate)
+
+# Definir las variables explicativas
+variables <- c("lcavol", "lweight", "svi", "lbph",
+               "age", "lcp", "pgg45", "gleason")
+
+# Inicializar vectores para almacenar los resultados
+error_residual <- numeric(length(variables))
+R2 <- numeric(length(variables))
+
+# Ajustar los modelos y registrar los resultados
+for (i in seq_along(variables)) {
+  formula <- as.formula(paste("lpsa ~", paste(variables[1:i], collapse = " + ")))
+  modelo <- lm(formula, data = prostate)
+  error_residual[i] <- summary(modelo)$sigma
+  R2[i] <- summary(modelo)$r.squared
+}
+
+# Crear un data frame con los resultados
+resultados <- data.frame(Variables = 1:length(variables),
+                         Ultima_variable = variables,
+                         Error_residual = round(error_residual, 4),
+                         R2 = round(R2, 4))
+resultados
+```
+
+\color{black}
+```{r, fig.width=7, fig.height=3.5, out.width="80%", fig.align="center"}
+# Gráfica de la evolución del error estándar residual y R^2
+par(mfrow = c(1, 2))
+plot(seq_along(variables), error_residual, type = "b",
+     xlab = "Número de variables", ylab = "Error estándar residual",
+     main = "Error residual")
+plot(seq_along(variables), R2, type = "b",
+     xlab = "Número de variables", ylab = "R cuadrado",
+     main = "Coeficiente de determinación")
+par(mfrow = c(1, 1))
+```
+
+\color{uocblue}
+Al incorporar nuevas variables, el coeficiente $R^2$ no disminuye. El error estándar residual tiene en cuenta también los grados de libertad, por lo que su evolución no tiene por qué ser siempre decreciente. En estos datos pasa de `r round(error_residual[1], 3)` a `r round(tail(error_residual, 1), 3)`.
+
+\color{black}
+5. (Ejercicio 5, capítulo 2, página 30)
+
+Using the `prostate` data, plot `lpsa` against `lcavol`. Fit the regressions of `lpsa` on `lcavol` and `lcavol` on `lpsa`. Display both regression lines on the plot. At what point do the two lines intersect?
+
+\color{uocblue}
+Ajustamos ambas regresiones. Para representar las dos rectas en unos mismos ejes, despejamos `lpsa` en la segunda regresión.
+
+\color{black}
+```{r}
+# Ajustar los modelos de regresión
+modelo_yx <- lm(lpsa ~ lcavol, data = prostate)
+modelo_xy <- lm(lcavol ~ lpsa, data = prostate)
+coef(modelo_yx)
+coef(modelo_xy)
+```
+
+\color{black}
+```{r, fig.width=6, fig.height=4, out.width="70%", fig.align="center"}
+# Gráfica de lpsa frente a lcavol con ambas rectas de regresión
+plot(prostate$lcavol, prostate$lpsa,
+     xlab = "lcavol", ylab = "lpsa",
+     main = "Dos rectas de regresión")
+abline(modelo_yx, col = "red", lwd = 2)
+a2 <- -coef(modelo_xy)[1] / coef(modelo_xy)[2]
+b2 <- 1 / coef(modelo_xy)[2]
+abline(a2, b2, col = "blue", lwd = 2)
+legend("topleft", legend = c("lpsa sobre lcavol", "lcavol sobre lpsa"),
+       col = c("red", "blue"), lty = 1, bty = "n")
+```
+
+\color{uocblue}
+Las dos rectas se cortan en el punto formado por las medias muestrales de ambas variables.
+
+\color{black}
+```{r}
+# Punto de intersección
+c(lcavol = mean(prostate$lcavol), lpsa = mean(prostate$lpsa))
+```
+
+\color{uocblue}
+Por tanto, el punto de intersección es aproximadamente (`r round(mean(prostate$lcavol), 3)`, `r round(mean(prostate$lpsa), 3)`).
+
+\clearpage
+\color{black}
+6. (Ejercicio 6, capítulo 2, página 30)
+
+Thirty samples of cheddar cheese were analyzed for their content of acetic acid, hydrogen sulfide and lactic acid. Each sample was tasted and scored by a panel of judges and the average taste score produced. Use the `cheddar` data to answer the following:
+
+\color{black}
+**(a)** Fit a regression model with `taste` as the response and the three chemical contents as predictors. Report the values of the regression coefficients.
+
+\color{uocblue}
+Ajustamos el modelo de regresión múltiple y obtenemos sus coeficientes.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(cheddar)
+
+# Ajustar el modelo de regresión
+modelo_queso <- lm(taste ~ Acetic + H2S + Lactic, data = cheddar)
+coef(modelo_queso)
+summary(modelo_queso)
+```
+
+\color{uocblue}
+Los coeficientes indican el cambio estimado en la puntuación de sabor asociado a cada variable, manteniendo constantes las otras dos.
+
+\color{black}
+**(b)** Compute the correlation between the fitted values and the response. Square it. Identify where this value appears in the regression output.
+
+\color{black}
+```{r}
+# Calcular la correlación entre los valores ajustados y la respuesta
+cor(fitted(modelo_queso), cheddar$taste)
+cor(fitted(modelo_queso), cheddar$taste)^2
+summary(modelo_queso)$r.squared
+```
+
+\color{uocblue}
+El cuadrado de la correlación coincide con el coeficiente de determinación $R^2$ que aparece en `Multiple R-squared` dentro de `summary()`.
+
+\color{black}
+**(c)** Fit the same regression model but without an intercept term. What is the value of $R^2$ reported in the output? Compute a more reasonable measure of the goodness of fit for this example.
+
+\color{uocblue}
+Repetimos el ajuste sin intercepto. En este caso, el $R^2$ que proporciona R utiliza una referencia distinta a la del modelo con intercepto. Para comparar el ajuste calculamos el coeficiente de determinación respecto a la media de la respuesta.
+
+\color{black}
+```{r}
+# Ajustar el modelo sin intercepto
+modelo_queso_sin <- lm(taste ~ Acetic + H2S + Lactic - 1,
+                       data = cheddar)
+summary(modelo_queso_sin)$r.squared
+
+# Calcular el R^2 centrado respecto a la media
+SCR <- sum(residuals(modelo_queso_sin)^2)
+SCT <- sum((cheddar$taste - mean(cheddar$taste))^2)
+R2_centrado <- 1 - SCR / SCT
+R2_centrado
+```
+
+\color{uocblue}
+El $R^2$ comunicado por R es `r round(summary(modelo_queso_sin)$r.squared, 4)`, mientras que el coeficiente calculado respecto a la media es `r round(R2_centrado, 4)`. Este segundo valor permite valorar el ajuste tomando como referencia la variabilidad alrededor de la media.
+
+\color{black}
+**(d)** Compute the regression coefficients from the original fit using the QR decomposition showing your R code.
+
+\color{uocblue}
+Utilizamos la descomposición QR de la matriz de diseño del modelo original. A partir de $X=QR$, resolvemos $R\beta=Q'Y$.
+
+\color{black}
+```{r}
+# Calcular los coeficientes mediante la descomposición QR
+X <- model.matrix(modelo_queso)
+y <- cheddar$taste
+qr_X <- qr(X)
+Q <- qr.Q(qr_X)
+R <- qr.R(qr_X)
+coef_QR <- solve(R, t(Q) %*% y)
+cbind(Minimos_cuadrados = coef(modelo_queso), QR = coef_QR)
+```
+
+\color{uocblue}
+Los coeficientes obtenidos mediante QR coinciden con los proporcionados por `lm()`.
+
+\color{black}
+7. (Ejercicio 7, capítulo 2, página 31)
+
+An experiment was conducted to determine the effect of four factors on the resistivity of a semiconductor wafer. The data is found in `wafer` where each of the four factors is coded as − or + depending on whether the low or the high setting for that factor was used. Fit the linear model `resist ~ x1 + x2 + x3 + x4`.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(wafer)
+
+# Ajustar el modelo de regresión
+modelo_wafer <- lm(resist ~ x1 + x2 + x3 + x4, data = wafer)
+summary(modelo_wafer)
+```
+
+\color{black}
+**(a)** Extract the X matrix using the `model.matrix` function. Examine this to determine how the low and high levels have been coded in the model.
+
+\color{black}
+```{r}
+# Extraer la matriz de diseño
+X_wafer <- model.matrix(modelo_wafer)
+head(X_wafer)
+levels(wafer$x1)
+```
+
+\color{uocblue}
+La matriz contiene una columna de unos para el intercepto. Para cada factor, el nivel de referencia se representa mediante 0 y el otro nivel mediante 1.
+
+\color{black}
+**(b)** Compute the correlation in the X matrix. Why are there some missing values in the matrix?
+
+\color{black}
+```{r}
+# Calcular la matriz de correlaciones
+cor(X_wafer)
+```
+
+\color{uocblue}
+Los valores ausentes corresponden a las correlaciones con la columna del intercepto, que es constante y tiene varianza cero.
+
+\color{black}
+**(c)** What difference in resistance is expected when moving from the low to the high level of `x1`?
+
+\color{black}
+```{r}
+# Calcular la diferencia esperada en la resistencia al cambiar de nivel bajo a alto de x1
+coef(modelo_wafer)
+```
+
+\color{uocblue}
+La diferencia estimada entre los niveles bajo y alto de `x1`, manteniendo los demás factores constantes, viene dada por el coeficiente de `x1`: `r round(unname(coef(modelo_wafer)[2]), 4)` unidades, tomando como referencia la codificación mostrada en el apartado (a).
+
+\color{black}
+**(d)** Refit the model without `x4` and examine the regression coefficients and standard errors. What stayed the same as the original fit and what changed?
+
+\color{black}
+```{r}
+# Ajustar el modelo sin x4
+modelo_wafer_reducido <- lm(resist ~ x1 + x2 + x3, data = wafer)
+summary(modelo_wafer_reducido)
+
+# Comparar los coeficientes y errores estándar
+summary(modelo_wafer)$coefficients
+summary(modelo_wafer_reducido)$coefficients
+```
+
+\color{uocblue}
+Al eliminar `x4`, los coeficientes de `x1`, `x2` y `x3` se mantienen iguales (25.7625, -69.8875 y 43.5875). En cambio, el intercepto pasa de 236.7812 a 229.5375. Los errores estándar de los tres factores cambian ligeramente, de 13.2099 a 13.3210, y el del intercepto disminuye de 14.7691 a 13.3210.
+
+\color{black}
+**(e)** Explain how the change in the regression coefficients is related to the correlation matrix of X.
+
+\color{uocblue}
+En la matriz de correlaciones del apartado (b) vemos que las correlaciones de `x4` con `x1`, `x2` y `x3` son cero. Por eso, al quitar `x4`, los coeficientes de esos tres factores no cambian. El intercepto sí cambia, al igual que los errores estándar, porque hemos ajustado un modelo distinto.
+
+\clearpage
+\section*{Ejercicios del libro de Carmona}
+\addcontentsline{toc}{section}{Ejercicios del libro de Carmona}
+
+\color{black}
+
+1. (Ejercicio 2.1 del capítulo 2, página 41)
+
+Una variable $Y$ toma los valores $y_1$, $y_2$ y $y_3$ en función de otra variable $X$ con los valores $x_1$, $x_2$ y $x_3$. Determinar cuáles de los siguientes modelos son lineales y encontrar, en su caso, la matriz de diseño para $x_1=1$, $x_2=2$ y $x_3=3$.
+
+\color{black}
+**(a)** $y_i=\beta_0+\beta_1x_i+\beta_2(x_i^2-1)+\epsilon_i$.
+
+\color{uocblue}
+El modelo es lineal porque los parámetros aparecen de forma lineal, aunque tengamos un término cuadrático en $x_i$.
+
+Para construir la matriz de diseño, tomamos los coeficientes que acompañan a cada parámetro: $1$, $x_i$ y $x_i^2-1$. Así, la matriz queda:
+
+\[
+X=
+\begin{pmatrix}
+1 & x_1 & x_1^2-1\\
+1 & x_2 & x_2^2-1\\
+1 & x_3 & x_3^2-1
+\end{pmatrix}.
+\]
+
+Sustituyendo los valores de $x_i$:
+
+\[
+X=
+\begin{pmatrix}
+1 & 1 & 0\\
+1 & 2 & 3\\
+1 & 3 & 8
+\end{pmatrix}.
+\]
+
+\color{black}
+**(b)** $y_i=\beta_0+\beta_1x_i+\beta_2e^{x_i}+\epsilon_i$.
+
+\color{uocblue}
+Este modelo también es lineal, ya que la exponencial afecta a $x_i$ y no a los parámetros.
+
+En este caso, las columnas de la matriz de diseño corresponden a $1$, $x_i$ y $e^{x_i}$:
+
+\[
+X=
+\begin{pmatrix}
+1 & x_1 & e^{x_1}\\
+1 & x_2 & e^{x_2}\\
+1 & x_3 & e^{x_3}
+\end{pmatrix}.
+\]
+
+Sustituyendo los valores dados:
+
+\[
+X=
+\begin{pmatrix}
+1 & 1 & e\\
+1 & 2 & e^2\\
+1 & 3 & e^3
+\end{pmatrix}.
+\]
+
+\color{black}
+**(c)** $y_i=\beta_1x_i(\beta_2\tan(x_i))+\epsilon_i$.
+
+\color{uocblue}
+Si desarrollamos el producto, tenemos:
+
+\[
+y_i=\beta_1\beta_2x_i\tan(x_i)+\epsilon_i.
+\]
+
+En este caso, el modelo no es lineal porque los parámetros $\beta_1$ y $\beta_2$ están multiplicados entre sí.
+
+Por tanto, no corresponde construir una matriz de diseño para un modelo lineal en estos parámetros.
+
+\color{black}
+2. (Ejercicio 2.4 del capítulo 2, página 42)
+
+Cuatro objetos cuyos pesos exactos son $\beta_1$, $\beta_2$, $\beta_3$ y $\beta_4$ han sido pesados en una balanza de platillos de acuerdo con el siguiente esquema:
+
+| $\beta_1$ | $\beta_2$ | $\beta_3$ | $\beta_4$ | Peso |
+|---:|---:|---:|---:|---:|
+| 1 | 1 | 1 | 1 | 9.2 |
+| 1 | -1 | 1 | 1 | 8.3 |
+| 1 | 0 | 0 | 1 | 5.4 |
+| 1 | 0 | 0 | -1 | -1.6 |
+| 1 | 0 | 1 | 1 | 8.7 |
+| 1 | 1 | -1 | 1 | 3.5 |
+
+Hallar las estimaciones de cada $\beta_i$ y de la varianza del error.
+
+\color{uocblue}
+Escribimos el modelo en forma matricial $Y=X\beta+\epsilon$. La matriz de diseño contiene los valores del esquema de pesadas, mientras que el vector $Y$ recoge los pesos observados.
+
+\color{black}
+```{r}
+X <- matrix(c(
+  1,  1,  1,  1,
+  1, -1,  1,  1,
+  1,  0,  0,  1,
+  1,  0,  0, -1,
+  1,  0,  1,  1,
+  1,  1, -1,  1
+), nrow = 6, byrow = TRUE)
+Y <- c(9.2, 8.3, 5.4, -1.6, 8.7, 3.5)
+
+# Estimaciones por mínimos cuadrados
+beta <- solve(t(X) %*% X) %*% t(X) %*% Y
+rownames(beta) <- c("beta1", "beta2", "beta3", "beta4")
+beta
+```
+
+\color{uocblue}
+Los valores obtenidos son las estimaciones mínimo-cuadráticas de los cuatro pesos. Para estimar la varianza del error calculamos la suma de cuadrados residual y la dividimos entre $n-r$, donde $n=6$ es el número de observaciones y $r=4$ el rango de la matriz de diseño.
+
+\[
+\hat\sigma^2=\frac{SCR}{n-r}=\frac{(Y-X\hat\beta)'(Y-X\hat\beta)}{6-4}.
+\]
+
+\color{black}
+```{r}
+# Residuos y suma de cuadrados residual
+residuos <- Y - X %*% beta
+SCR <- sum(residuos^2)
+
+# Estimación de la varianza
+sigma2 <- SCR / (length(Y) - qr(X)$rank)
+SCR
+sigma2
+```
+
+\color{uocblue}
+Las estimaciones de los pesos son `r paste(round(as.numeric(beta), 4), collapse = ", ")`, respectivamente. La varianza estimada del error es `r round(sigma2, 4)`.
