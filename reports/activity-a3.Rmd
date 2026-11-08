@@ -1,0 +1,505 @@
+---
+title: "Actividad A3. Inferencia"
+author: "Dra. Marta Barea Sepúlveda"
+date: "27 de octubre de 2026"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    highlight: tango
+    latex_engine: pdflatex
+    keep_tex: false
+    includes:
+      in_header: preamble.tex
+  word_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
+classoption: twoside
+geometry: top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm
+fontsize: 11pt
+lang: es
+---
+
+\clearpage
+\pagestyle{plain}
+\setcounter{page}{1}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, tidy = FALSE)
+```
+
+\newpage
+\section*{Nota sobre los ejercicios realizados}
+\addcontentsline{toc}{section}{Nota sobre los ejercicios realizados}
+
+En esta actividad se han realizado **todos los ejercicios obligatorios** propuestos en el documento *Inferencia*.
+
+De acuerdo con las indicaciones del enunciado, los ejercicios señalados con (*) son opcionales y los señalados con (**) son, además, de mayor dificultad. Por este motivo, estos ejercicios opcionales no se incluyen en la presente entrega.
+
+Los ejercicios realizados son:
+
+- **Ejercicios del libro de Faraway:** 1, 2, 3 y 4.
+- **Otros ejercicios:** 1.
+
+\clearpage
+\section*{Ejercicios del libro de Faraway}
+\addcontentsline{toc}{section}{Ejercicios del libro de Faraway}
+
+\color{black}
+1. (Ejercicio 1, capítulo 3, página 48)
+
+For the prostate data, fit a model with lpsa as the response and the other variables as predictors.
+
+\color{uocblue}
+Ajustamos el modelo de regresión múltiple con `lpsa` como variable respuesta y las demás variables como explicativas.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(prostate)
+
+# Ajustar el modelo de regresión
+modelo_prostata <- lm(lpsa ~ lcavol + lweight + age + lbph + svi + lcp +
+                        gleason + pgg45, data = prostate)
+
+# Resumen del modelo
+summary(modelo_prostata)
+```
+
+\color{black}
+**(a)** Compute 90 and 95% CIs for the parameter associated with age. Using just these intervals, what could we have deduced about the p-value for age in the regression summary?
+
+\color{uocblue}
+Calculamos los intervalos de confianza del 90 % y del 95 % para el coeficiente de `age`.
+
+\color{black}
+```{r}
+# Calcular los intervalos de confianza para el coeficiente de age
+intervalo_90 <- confint(modelo_prostata, parm = "age", level = 0.90)
+intervalo_95 <- confint(modelo_prostata, parm = "age", level = 0.95)
+intervalo_90
+intervalo_95
+```
+
+\color{uocblue}
+En el intervalo de confianza del 90 %, los dos extremos son negativos (−0,0382 y −0,0011), por lo que el cero queda fuera. Esto nos permite rechazar la hipótesis de que el coeficiente de `age` sea cero al nivel de significación del 10 %. Por tanto, sabemos que el p-valor es menor que 0,10.
+
+En cambio, el intervalo del 95 % va de −0,0418 a 0,0026 y sí incluye el cero. Por eso, al nivel del 5 % no tenemos evidencia suficiente para rechazar esa misma hipótesis, lo que indica que el p-valor es mayor o igual que 0,05.
+
+Juntando ambos resultados, deducimos que **el p-valor está entre 0,05 y 0,10**, sin necesidad de consultar el resumen del modelo.
+
+\clearpage
+\color{black}
+**(b)** Compute and display a 95% joint confidence region for the parameters associated with age and lbph. Plot the origin on this display. The location of the origin on the display tells us the outcome of a certain hypothesis test. State that test and its outcome.
+
+\color{uocblue}
+Representamos la región de confianza conjunta para los coeficientes de `age` y `lbph`, junto con el origen, que representa la hipótesis de que ambos coeficientes son cero.
+
+\color{black}
+```{r, fig.width=7, fig.height=4.6, out.width="85%", fig.align="center", fig.show="hold"}
+# Calcular la elipse y las estimaciones de los dos coeficientes
+library(ellipse)
+indices <- match(c("age", "lbph"), names(coef(modelo_prostata)))
+region <- ellipse(modelo_prostata, indices, level = 0.95, npoints = 300)
+estimacion <- coef(modelo_prostata)[indices]
+
+# Preparar los ejes y una cuadrícula suave
+op <- par(mar = c(5.5, 4.5, 3, 1), las = 1, mgp = c(2.7, 0.7, 0))
+plot(region, type = "n", bty = "n", col.axis = "#52616B",
+     xlab = expression(beta[age]), ylab = expression(beta[lbph]),
+     main = "Región de confianza conjunta al 95 %")
+abline(h = axTicks(2), v = axTicks(1), col = "#E4E9ED", lty = 3)
+
+# Sombrear la región y marcar las referencias en cero
+polygon(region, col = "#E5F2F8", border = "#006699", lwd = 2)
+abline(h = 0, v = 0, col = "#8A969E", lty = 2)
+
+# Distinguir la estimación conjunta y el origen
+points(estimacion[1], estimacion[2], pch = 21, bg = "#006699",
+       col = "white", cex = 1.5, lwd = 1.5)
+points(0, 0, pch = 4, col = "#B54725", cex = 1.5, lwd = 2)
+legend("bottom", inset = -0.35, xpd = NA, horiz = TRUE, bty = "n",
+       legend = c("Estimación conjunta", "Origen (0, 0)"),
+       pch = c(21, 4), pt.bg = c("#006699", NA),
+       col = c("#006699", "#B54725"), pt.lwd = 2, cex = 0.9)
+par(op)
+```
+
+\color{uocblue}
+La posición del origen permite contrastar $H_0:\beta_{age}=\beta_{lbph}=0$ frente a la alternativa de que al menos uno de los dos coeficientes sea distinto de cero. Comprobamos el resultado mediante la comparación con el modelo que excluye ambas variables.
+
+\color{black}
+```{r}
+# Contraste equivalente mediante comparación de modelos
+modelo_sin_edad_lbph <- update(modelo_prostata, . ~ . - age - lbph)
+comparacion_edad_lbph <- anova(modelo_sin_edad_lbph, modelo_prostata)
+comparacion_edad_lbph
+```
+
+\color{uocblue}
+Vemos que el origen queda dentro de la región de confianza del 95 %. Esto indica que no podemos rechazar conjuntamente que los coeficientes de `age` y `lbph` sean cero al nivel del 5 %.
+
+El contraste F confirma lo que observamos en la gráfica: el estadístico es `r round(comparacion_edad_lbph$F[2], 3)` y el p-valor es `r signif(comparacion_edad_lbph[2, 6], 3)`. Como el p-valor es mayor que 0,05, no tenemos evidencia suficiente para rechazar la hipótesis nula.
+
+\clearpage
+\color{black}
+**(c)** Execute the permutation test corresponding to the t-test for age in this model.
+
+\color{uocblue}
+Aplicamos el contraste de permutaciones y examinamos el coeficiente de `age`.
+
+\color{black}
+```{r}
+# Ajustar el modelo con contrastes de permutaciones
+library(lmPerm)
+set.seed(123)
+modelo_perm <- lmp(lpsa ~ ., data = prostate)
+summary(modelo_perm)
+pvalor_perm_edad <- summary(modelo_perm)$coefficients["age", "Pr(Prob)"]
+```
+
+\color{uocblue}
+El p-valor de permutaciones para `age` es `r signif(pvalor_perm_edad, 3)`. Por tanto, `r if (pvalor_perm_edad < 0.05) "rechazamos" else "no rechazamos"` al 5 % la hipótesis de que su coeficiente sea cero.
+
+\color{black}
+**(d)** Remove all the predictors that are not significant at the 5% level. Test this model against the original model. Which model is preferred?
+
+\color{uocblue}
+Identificamos las variables con p-valor inferior a 0,05 y ajustamos un modelo reducido con ellas. Después comparamos ambos modelos mediante un test F.
+
+\color{black}
+```{r}
+# Identificar las variables significativas al 5 %
+pvalores <- summary(modelo_prostata)$coefficients[-1, 4]
+variables_significativas <- names(pvalores)[pvalores < 0.05]
+# Ajustar el modelo reducido
+formula_reducida <- reformulate(variables_significativas, response = "lpsa")
+modelo_reducido <- lm(formula_reducida, data = prostate)
+summary(modelo_reducido)
+# Comparar el modelo reducido con el modelo completo
+comparacion_prostata <- anova(modelo_reducido, modelo_prostata)
+comparacion_prostata
+```
+
+\color{uocblue}
+El p-valor de la comparación es `r signif(comparacion_prostata[2, 6], 3)`. No encontramos diferencias significativas entre ambos modelos al 5 %, por lo que preferimos el modelo reducido, que utiliza menos variables.
+
+\clearpage
+\color{black}
+2. (Ejercicio 2, capítulo 3, página 49)
+
+Thirty samples of cheddar cheese were analyzed for their content of acetic acid, hydrogen sulfide and lactic acid. Each sample was tasted and scored by a panel of judges and the average taste score produced.
+
+\color{black}
+**(a)** Fit a regression model with taste as the response and the three chemical contents as predictors. Identify the predictors that are statistically significant at the 5% level.
+
+\color{uocblue}
+Ajustamos el modelo con `taste` como respuesta y los tres contenidos químicos como variables explicativas. Consideramos significativas las variables con p-valor inferior a 0,05.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(cheddar)
+
+# Ajustar el modelo de regresión
+modelo_queso <- lm(taste ~ Acetic + H2S + Lactic, data = cheddar)
+summary(modelo_queso)
+
+# Identificar las variables significativas al 5 %
+pvalores_queso <- summary(modelo_queso)$coefficients[-1, 4]
+significativas_queso <- names(pvalores_queso)[pvalores_queso < 0.05]
+significativas_queso
+```
+
+\color{uocblue}
+Las variables significativas al 5 % son `r paste(significativas_queso, collapse = " y ")`.
+
+\color{black}
+**(b)** Acetic and H2S are measured on a log scale. Fit a linear model where all three predictors are measured on their original scale. Identify the predictors that are statistically significant at the 5% level for this model.
+
+\color{uocblue}
+Como `Acetic` y `H2S` están expresadas en escala logarítmica, aplicamos la función exponencial para recuperar su escala original.
+
+\color{black}
+```{r}
+# Ajustar el modelo con las variables en su escala original
+modelo_queso_original <- lm(taste ~ exp(Acetic) + exp(H2S) + Lactic,
+                            data = cheddar)
+summary(modelo_queso_original)
+
+# Identificar las variables significativas al 5 %
+pvalores_original <- summary(modelo_queso_original)$coefficients[-1, 4]
+significativas_original <- names(pvalores_original)[pvalores_original < 0.05]
+significativas_original
+```
+
+\color{uocblue}
+En este segundo modelo, la única variable significativa al 5 % es `r paste(significativas_original, collapse = " y ")`.
+
+\color{black}
+**(c)** Can we use an F-test to compare these two models? Explain. Which model provides a better fit to the data?
+
+\color{uocblue}
+No podemos utilizar el test F de comparación de modelos porque ninguno de los dos modelos es una versión restringida del otro. Para comparar su ajuste podemos observar sus sumas de cuadrados residuales y sus coeficientes de determinación.
+
+\color{black}
+```{r}
+# Comparar la suma de cuadrados residual y el coeficiente de determinación
+resultados_queso <- data.frame(
+  Modelo = c("Escala logarítmica", "Escala original"),
+  SCR = c(deviance(modelo_queso), deviance(modelo_queso_original)),
+  R2 = c(summary(modelo_queso)$r.squared,
+         summary(modelo_queso_original)$r.squared))
+resultados_queso
+```
+
+\color{uocblue}
+El modelo con `Acetic` y `H2S` en escala logarítmica presenta una suma de cuadrados residual menor y un coeficiente $R^2$ mayor. Por tanto, proporciona un mejor ajuste a estos datos.
+
+\color{black}
+**(d)** If H2S is increased 0.01 for the model used in (a), what change in the taste would be expected?
+
+\color{uocblue}
+Manteniendo constantes las demás variables, el cambio esperado en `taste` es el coeficiente de `H2S` multiplicado por 0,01.
+
+\color{black}
+```{r}
+# Calcular el cambio esperado en la puntuación de sabor
+0.01 * coef(modelo_queso)["H2S"]
+```
+
+\color{uocblue}
+La puntuación de sabor aumenta aproximadamente `r round(0.01 * coef(modelo_queso)["H2S"], 4)` unidades, manteniendo constantes los contenidos de ácido acético y ácido láctico.
+
+\color{black}
+**(e)** What is the percentage change in H2S on the original scale corresponding to an additive increase of 0.01 on the (natural) log scale?
+
+\color{uocblue}
+Un incremento de 0,01 en el logaritmo natural equivale a multiplicar el valor original por $e^{0,01}$. Por tanto, el cambio porcentual es:
+
+\color{black}
+```{r}
+# Calcular el cambio porcentual en la escala original
+(exp(0.01) - 1) * 100
+```
+
+\color{uocblue}
+El contenido de H2S aumenta aproximadamente un `r round((exp(0.01) - 1) * 100, 3)` % en la escala original.
+
+\clearpage
+\color{black}
+3. (Ejercicio 3, capítulo 3, página 49)
+
+Using the teengamb data, fit a model with gamble as the response and the other variables as predictors.
+
+\color{uocblue}
+Ajustamos el modelo de regresión múltiple con `gamble` como variable respuesta y las cuatro variables restantes como explicativas.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(teengamb)
+
+# Ajustar el modelo de regresión
+modelo_teen <- lm(gamble ~ sex + status + income + verbal, data = teengamb)
+summary(modelo_teen)
+```
+
+\color{black}
+**(a)** Which variables are statistically significant at the 5% level?
+
+\color{uocblue}
+Identificamos las variables cuyo p-valor es inferior a 0,05.
+
+\color{black}
+```{r}
+# Identificar las variables significativas al 5 %
+pvalores_teen <- summary(modelo_teen)$coefficients[-1, 4]
+significativas_teen <- names(pvalores_teen)[pvalores_teen < 0.05]
+significativas_teen
+```
+
+\color{uocblue}
+Las variables significativas al 5 % son `r paste(significativas_teen, collapse = " y ")`.
+
+\color{black}
+**(b)** What interpretation should be given to the coefficient for sex?
+
+\color{uocblue}
+La variable `sex` está codificada como 0 para hombres y 1 para mujeres. Por tanto, su coeficiente indica la diferencia entre el gasto previsto para una mujer y para un hombre, manteniendo constantes las demás variables.
+
+\color{black}
+```{r}
+# Diferencia en el gasto previsto entre mujeres y hombres
+coef(modelo_teen)["sex"]
+```
+
+\color{uocblue}
+El gasto anual previsto para una mujer es aproximadamente `r round(-coef(modelo_teen)["sex"], 2)` libras menor que para un hombre, manteniendo constantes las demás variables.
+
+\color{black}
+**(c)** Fit a model with just income as a predictor and use an F-test to compare it to the full model.
+
+\color{uocblue}
+Ajustamos un modelo reducido con `income` como única variable explicativa y lo comparamos con el modelo completo mediante un test F.
+
+\color{black}
+```{r}
+# Ajustar el modelo con income como única variable explicativa
+modelo_teen_income <- lm(gamble ~ income, data = teengamb)
+
+# Comparar el modelo reducido con el modelo completo
+comparacion_teen <- anova(modelo_teen_income, modelo_teen)
+comparacion_teen
+```
+
+\color{uocblue}
+El p-valor del contraste F es `r signif(comparacion_teen[2, 6], 3)`. Rechazamos al 5 % la hipótesis de que los coeficientes de `sex`, `status` y `verbal` sean conjuntamente cero. Por tanto, preferimos el modelo completo.
+
+\clearpage
+\color{black}
+4. (Ejercicio 4, capítulo 3, página 49)
+
+Using the sat data.
+
+\color{black}
+**(a)** Fit a model with total sat score as the response and expend, ratio and salary as predictors. Test the hypothesis that $\beta_{salary}=0$. Test the hypothesis that $\beta_{salary}=\beta_{ratio}=\beta_{expend}=0$. Do any of these predictors have an effect on the response?
+
+\color{uocblue}
+Ajustamos el modelo con `total` como respuesta. Primero contrastamos individualmente el coeficiente de `salary` con el test t y después contrastamos conjuntamente los tres coeficientes mediante el test F.
+
+\color{black}
+```{r}
+# Cargar el paquete y los datos
+library(faraway)
+data(sat)
+
+# Ajustar el modelo de regresión
+modelo_sat <- lm(total ~ expend + ratio + salary, data = sat)
+summary(modelo_sat)
+
+# Contraste individual: H0: beta_salary = 0
+summary(modelo_sat)$coefficients["salary", ]
+
+# Contraste global: los tres coeficientes son cero
+modelo_sat_nulo <- lm(total ~ 1, data = sat)
+comparacion_sat <- anova(modelo_sat_nulo, modelo_sat)
+comparacion_sat
+```
+
+\color{uocblue}
+El p-valor individual para `salary` es `r signif(summary(modelo_sat)$coefficients["salary", 4], 3)`, por lo que no rechazamos al 5 % la hipótesis de que su coeficiente sea cero.
+
+El p-valor global es `r signif(comparacion_sat[2, 6], 3)`. En este caso, rechazamos la hipótesis de que los tres coeficientes sean cero. Por tanto, existe evidencia de que al menos una de las variables explicativas tiene relación con la puntuación total.
+
+\color{black}
+**(b)** Now add takers to the model. Test the hypothesis that $\beta_{takers}=0$. Compare this model to the previous one using an F-test. Demonstrate that the F-test and t-test here are equivalent.
+
+\color{uocblue}
+Añadimos `takers` al modelo y contrastamos su coeficiente mediante un test t. Después comparamos los dos modelos con un test F. Como solo añadimos una variable, los dos contrastes son equivalentes y se verifica $F=t^2$.
+
+\color{black}
+```{r}
+# Ajustar el modelo que incorpora takers
+modelo_sat_takers <- lm(total ~ expend + ratio + salary + takers,
+                        data = sat)
+
+# Contraste individual: H0: beta_takers = 0
+summary(modelo_sat_takers)$coefficients["takers", ]
+```
+
+\clearpage
+\color{black}
+```{r}
+# Comparar los dos modelos
+comparacion_takers <- anova(modelo_sat, modelo_sat_takers)
+comparacion_takers
+
+# Comprobar la equivalencia F = t^2
+t_takers <- summary(modelo_sat_takers)$coefficients["takers", 3]
+F_takers <- comparacion_takers$F[2]
+c(t_cuadrado = t_takers^2, F = F_takers)
+```
+
+\color{uocblue}
+El p-valor para `takers` es `r signif(summary(modelo_sat_takers)$coefficients["takers", 4], 3)`, por lo que rechazamos al 5 % la hipótesis de que su coeficiente sea cero. Los valores de $t^2$ y $F$ coinciden y ambos contrastes proporcionan el mismo p-valor, como corresponde a una única restricción.
+
+\clearpage
+\color{black}
+\section*{Otros ejercicios}
+\addcontentsline{toc}{section}{Otros ejercicios}
+
+\color{black}
+1. En los ejemplos 5.3.2 y 5.6.3 del libro de Carmona y con los datos del diseño cross-over simplificado considerar el modelo en el que el efecto de la interacción es distinto cuando primero se administra el tratamiento a y a continuación el tratamiento b que cuando se hace al revés. Es decir, hay dos parámetros distintos $\gamma_{ab}$ y $\gamma_{ba}$.
+
+   Contrastar en ese modelo la hipótesis $H_0:\gamma_{ab}=\gamma_{ba}$. Comprobar primero que es una hipótesis contrastable.
+
+\color{uocblue}
+Distinguimos dos efectos de interacción, según el orden de administración de los tratamientos. El modelo queda:
+
+\[
+\begin{aligned}
+y_{1i}&=\mu+\alpha+\varepsilon_{1i},\\
+y_{2i}&=\mu+\beta+\gamma_{ab}+\varepsilon_{2i},\\
+y_{3i}&=\mu+\beta+\varepsilon_{3i},\\
+y_{4i}&=\mu+\alpha+\gamma_{ba}+\varepsilon_{4i}.
+\end{aligned}
+\]
+
+Para construir la matriz de diseño, tomamos los coeficientes que acompañan a cada parámetro. Con el vector de parámetros $(\mu,\alpha,\beta,\gamma_{ab},\gamma_{ba})$, la matriz reducida a las cuatro condiciones experimentales queda:
+
+\[
+X_R=\begin{pmatrix}
+1&1&0&0&0\\
+1&0&1&1&0\\
+1&0&1&0&0\\
+1&1&0&0&1
+\end{pmatrix}.
+\]
+
+La hipótesis nula es $H_0:\gamma_{ab}-\gamma_{ba}=0$, que corresponde a la fila $A=(0,0,0,1,-1)$. Comprobamos que puede escribirse como una combinación de las filas de la matriz de diseño:
+
+\[
+A=X_{R,1}+X_{R,2}-X_{R,3}-X_{R,4}.
+\]
+
+Por tanto, $\gamma_{ab}-\gamma_{ba}$ es una función paramétrica estimable y la hipótesis es contrastable.
+
+Para contrastarla utilizamos los datos del ejemplo 5.3.2 de Carmona y comparamos el modelo que permite dos efectos distintos con el modelo que impone un efecto común.
+
+\clearpage
+\color{black}
+```{r}
+# Datos de la tabla 5.2 de Carmona (2005)
+a_primero <- c(17, 34, 26, 10, 19, 17, 8, 16, 13, 11)
+b_despues_a <- c(17, 41, 26, 3, -6, -4, 11, 16, 16, 4)
+b_primero <- c(21, 20, 11, 26, 42, 28, 3, 3, 16, -10)
+a_despues_b <- c(10, 24, 32, 26, 52, 28, 27, 28, 21, 42)
+
+# Organizar la respuesta y las condiciones experimentales
+y <- c(a_primero, b_despues_a, b_primero, a_despues_b)
+orden <- factor(rep(c("a", "ab", "b", "ba"), each = 10))
+
+# Modelo general: una media para cada condición
+modelo_dos_efectos <- lm(y ~ orden)
+
+# Modelo restringido: mismo efecto de interacción en ambos órdenes
+base <- rep(c(1, 0, 0, 1), each = 10)
+interaccion <- rep(c(0, 1, 0, 1), each = 10)
+modelo_efecto_comun <- lm(y ~ base + interaccion)
+
+# Comparar los dos modelos
+comparacion_interaccion <- anova(modelo_efecto_comun, modelo_dos_efectos)
+comparacion_interaccion
+```
+
+\color{uocblue}
+El p-valor del contraste F es `r signif(comparacion_interaccion[2, 6], 3)`. No rechazamos la hipótesis nula al 5 %, por lo que no encontramos evidencia suficiente de que los efectos de interacción sean diferentes según el orden de administración de los tratamientos.
